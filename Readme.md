@@ -1,2 +1,4 @@
 ## 还是爬虫
-`输入诸如Step1.txt文件中的Url，可以获得诸如Step3.txt中的下载链接。`
+### 使用方法
+1. `修改MrCong.py文件中的起始页数 `
+2. ` cmd: python MrCong.py`

@@ -6,7 +6,7 @@ from urllib.request import getproxies
 import time
 
 # 延迟时间
-delay_time = 5
+delay_time = 16
 
 # 异步获取网页内容，并且使用代理
 async def Get_HtmlAsync(_url):
@@ -42,6 +42,37 @@ async def Write2File(data_list, des_location):
 async def Read_From_File(des_location):
     async with aiofiles.open(des_location, 'r', encoding='utf-8') as f:
         return await f.read()
+
+# 获取
+async def getOne_PageUrls(url):
+    text = await Get_HtmlAsync(url)
+    bsoup = bs4.BeautifulSoup(text, 'lxml')
+    divs = bsoup.find_all('div',class_='post-thumbnail')
+    urls = []
+    for div in divs:
+        urls.append(div.a.get('href'))
+    return urls
+    
+
+# https://mrcong.com/page/105/
+# 获取页面
+async def GetAll_pageUrls(beg, end):
+    base_url= 'https://mrcong.com'
+    Tasks = []
+    for i in range(beg,end+1):
+        if i == 1 :
+            url = base_url
+        else:
+            url = base_url+'/page/'+str(i)
+        print(url)
+        Tasks.append(getOne_PageUrls(url))
+    AllUrls = []
+    ListOfList = await asyncio.gather(*Tasks)
+    for list in ListOfList:
+        for i in list:
+            AllUrls.append(i)
+    await Write2File(AllUrls, 'Step1.txt')
+
 
 # 完成第二步，读取Step1.txt,写入Step2.txt
 async def Get_Url_Need2Play():
@@ -80,8 +111,13 @@ async def Get_DownloadUrl():
 
 
 # 将所有步骤合并
-async def MrCong():
+async def MrCong(beg,end):
+    await GetAll_pageUrls(beg,end)
+    print('第一步完成')
     await Get_Url_Need2Play()
+    print('第二步完成')
     await Get_DownloadUrl()
+    print('第三步完成')
 
-asyncio.run(MrCong())
+
+asyncio.run(MrCong(1,3))
